@@ -1,26 +1,22 @@
-import { createStore } from 'zustand'
+import { create } from 'zustand'
 
 export interface CounterState {
-  count: number
+  isOpen: boolean
 }
 
 export interface CounterActions {
-  increment: () => void
-  decrement: () => void
+  setIsOpen: () => void
 }
 
 export type CounterStore = CounterState & CounterActions
 
 export const defaultInitialState: CounterState = {
-  count: 0,
+  isOpen: true,
 }
 
-export const createCounterStore = (initState = defaultInitialState) => {
-  return createStore<CounterStore>()((set) => {
-    return {
-      ...initState,
-      increment: () => set((state) => ({ count: state.count + 1 })),
-      decrement: () => set((state) => ({ count: state.count - 1 })),
-    }
-  })
-}
+export const useSidebar = create<CounterStore>(setState => {
+  return {
+    ...defaultInitialState,
+    setIsOpen: () => setState(state => ({ isOpen: !state.isOpen })),
+  }
+})
