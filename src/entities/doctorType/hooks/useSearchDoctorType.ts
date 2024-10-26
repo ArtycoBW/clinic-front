@@ -1,16 +1,19 @@
-import { gql, useQuery } from "@apollo/client";
+import { useQuery } from "@apollo/client";
 import { useCallback } from "react";
-import searchDoctorType from "../gql/queries.graphql";
-import { SearchDoctorTypeResponse } from "../types";
 
-// Кастомный хук для поиска врачей
+import { SearchDoctorTypeResponse } from "../types";
+import { QUERY } from "../gql/queries";
+
 export const useSearchDoctorType = (searchStr: string) => {
-  const { data, loading, error, refetch } = useQuery<SearchDoctorTypeResponse>(gql`${searchDoctorType}`, {
+  const { data, loading, error, refetch } = useQuery<SearchDoctorTypeResponse>(QUERY, {
     variables: { searchStr },
-    skip: !searchStr, // Пропуск запроса, если searchStr пустой
   });
 
-  // Функция для инвалидации кэша
+  // Логи для отладки
+  console.log("Loading status:", loading);
+  console.log("Error if any:", error);
+  console.log("Full data received from GraphQL:", JSON.stringify(data, null, 2));
+
   const invalidateCache = useCallback(() => {
     refetch();
   }, [refetch]);

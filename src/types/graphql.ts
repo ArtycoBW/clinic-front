@@ -2726,10 +2726,3 @@ export type _UpdatePersonInput = {
 };
 
 export type DoctorTypeAttributesFragment = { __typename: '_E_DoctorType', id: string, name: string, description?: string | null };
-
-export type SearchDoctorTypeQueryVariables = Exact<{
-  searchStr: Scalars['String']['input'];
-}>;
-
-
-export type SearchDoctorTypeQuery = { __typename?: '_Query', searchDoctorType: { __typename?: '_EC_DoctorType', elems: Array<{ __typename: '_E_DoctorType', id: string, name: string, description?: string | null }> } };

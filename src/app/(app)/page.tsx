@@ -1,7 +1,6 @@
-'use client'
+'use client';
 import { useSearchDoctorType } from "@/entities/doctorType/hooks/useSearchDoctorType";
 import { useState } from "react";
-
 
 export default function Home() {
   const [searchStr, setSearchStr] = useState("");
@@ -10,6 +9,7 @@ export default function Home() {
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearchStr(event.target.value);
   };
+
   return (
     <div>
       <h1>Поиск врача</h1>
@@ -21,8 +21,8 @@ export default function Home() {
       />
       <button onClick={invalidateCache}>Обновить данные</button>
 
-      {loading && <p>Loading...</p>}
-      {error && <p>Error: {error.message}</p>}
+      {loading && <p>Загрузка...</p>}
+      {error && <p>Ошибка: {error.message}</p>}
 
       <ul>
         {doctors.map((doctor) => (
@@ -33,5 +33,5 @@ export default function Home() {
         ))}
       </ul>
     </div>
-  )
+  );
 }

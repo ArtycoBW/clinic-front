@@ -7,12 +7,3 @@ declare module '*/fragments.graphql' {
   export default defaultDocument;
 }
     
-
-declare module '*/queries.graphql' {
-  import { DocumentNode } from 'graphql';
-  const defaultDocument: DocumentNode;
-  export const searchDoctorType: DocumentNode;
-
-  export default defaultDocument;
-}
-    

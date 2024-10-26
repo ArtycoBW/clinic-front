@@ -8,5 +8,6 @@ export interface DoctorType {
 export interface SearchDoctorTypeResponse {
   searchDoctorType: {
     elems: DoctorType[];
+    count: number;
   };
 }
