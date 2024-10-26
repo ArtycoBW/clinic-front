@@ -3,7 +3,8 @@ import React, { useState, useEffect } from 'react'
 import Keycloak from 'keycloak-js' // теперь импортируем только Keycloak
 import { ApolloClient, ApolloProvider, InMemoryCache } from '@apollo/client'
 import { AppContext, UserInfo } from '@/components/AppContext'
-import { SidebarCustom } from '@/components/sidebar'
+import Sidebar from '@/components/sidebar'
+import Info from '@/components/info'
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   const [keycloak] = useState<Keycloak>(new Keycloak('/keycloak.json'))
@@ -43,14 +44,17 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
   return (
     <html lang="en">
-    <body>
-    <AppContext.Provider value={{ keycloak, userInfo }}>
-      <ApolloProvider client={apolloClient}>
-        <SidebarCustom />
-        {children}
-      </ApolloProvider>
-    </AppContext.Provider>
-    </body>
+      <body>
+        <AppContext.Provider value={{ keycloak, userInfo }}>
+          <ApolloProvider client={apolloClient}>
+            <div className="flex">
+              <Sidebar />
+              <div className="flex-auto p-4 w-full">{children}</div>
+              <Info />
+            </div>
+          </ApolloProvider>
+        </AppContext.Provider>
+      </body>
     </html>
   )
 }
