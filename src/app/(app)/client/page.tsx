@@ -1,6 +1,14 @@
+import { Header } from '@/components/header'
+import { Wrapper } from '@/components/wrapper'
+
 const ClientPage = () => {
   return (
-    <>hello</>
+    <>
+      <Header path="Главная" />
+      <Wrapper>
+        <div className="">hello</div>
+      </Wrapper>
+    </>
   )
 }
 
