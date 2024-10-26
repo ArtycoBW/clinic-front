@@ -1,6 +1,6 @@
 'use client'
 import React, { useState, useEffect } from "react";
-import Keycloak from "keycloak-js"; // теперь импортируем только Keycloak
+import Keycloak from "keycloak-js";
 import { ApolloClient, ApolloProvider, InMemoryCache } from "@apollo/client";
 import { AppContext, UserInfo } from "../../components/AppContext";
 
