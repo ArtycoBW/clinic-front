@@ -21,10 +21,10 @@ export const Header: FC<IHeaderProps> = ({ path }) => {
           </BreadcrumbItem>
         </BreadcrumbList>
       </BreadcrumbPage>
-      <div className="flex items-center justify-center rounded-lg h-12 bg-white pl-[12px] w-3/5">
-        <InputSearch />
-        <Input placeholder="Поиск" className="border-none outline-none ring-0 shadow-none" />
-      </div>
+      {/*<div className="flex items-center justify-center rounded-lg h-12 bg-white pl-[12px] w-3/5">*/}
+      {/*  <InputSearch />*/}
+      {/*  <Input placeholder="Поиск" className="border-none outline-none ring-0 shadow-none" />*/}
+      {/*</div>*/}
     </div>
   )
 }

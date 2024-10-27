@@ -35,21 +35,18 @@ const Sidebar = () => {
         {/* NAVBAR LINKS */}
         <nav className="z-10 mx-4 mt-8 grid gap-4">
           <SidebarLink icon={Home} label="Главная" href="/home" />
-          <SidebarLink icon={ChartPie} label="Отчёты" href="/reports" />
           <SidebarLink icon={User} label="Пользователи" href="/persons" />
-          <SidebarLink icon={ChartPie} label={isAdmin ? "Отчёты" : "Запись на приём"} href={isAdmin ? "/reports" : '/appointments'} />
+          <SidebarLink
+            icon={ChartPie}
+            label={isAdmin ? 'Отчёты' : 'Запись на приём'}
+            href={isAdmin ? '/reports' : '/appointments'}
+          />
           <SidebarLink icon={Heart} label="Клиенты" href="/clients" />
           <SidebarLink icon={User} label="Доктора" href="/doctors" />
-          <SidebarLink icon={BriefcaseMedical} label="Услуги" href="/services" />
-          <SidebarLink icon={Hospital} label="Клиники" href="/clinics" />
           <SidebarLink icon={Calendar} label="Запись к врачу" href="/schedule" />
-          <SidebarLink icon={Settings} label="Настройки" href="/settings" />
         </nav>
 
-        <Button
-          className="bg-[#77deb5] rounded-xl py-4 px-5 mx-6 mt-28"
-          onClick={() => keycloak?.logout()}
-        >
+        <Button className="bg-[#77deb5] rounded-xl py-4 px-5 mx-6 mt-28" onClick={() => keycloak?.logout()}>
           <span className="text-white">Выйти</span>
         </Button>
       </div>
