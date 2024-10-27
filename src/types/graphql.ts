@@ -2725,4 +2725,20 @@ export type _UpdatePersonInput = {
   lastName?: InputMaybe<Scalars['String']['input']>;
 };
 
+export type ClinicAttributesFragment = { __typename: '_E_Clinic', id: string, name?: string | null };
+
+export type ClinicDoctorAttributesFragment = { __typename: '_E_ClinicDoctor', id: string, clinic: { __typename?: '_E_Clinic', id: string, name?: string | null }, doctor: { __typename?: '_G_DoctorReference', entityId?: string | null, entity?: { __typename?: '_E_Doctor', doctorType: { __typename?: '_E_DoctorType', id: string, name: string }, person: { __typename?: '_G_PersonReference', entityId?: string | null, entity?: { __typename?: '_E_Person', firstName: string, lastName: string, inn?: string | null, birthDate?: any | null } | null } } | null } };
+
+export type ClinicDoctorAvailabilityAttributesFragment = { __typename: '_E_ClinicDoctorAvailability', id: string, beginDate: any, endDate: any, clinicOffice: { __typename?: '_E_ClinicOffice', id: string, officeNumber?: string | null } };
+
+export type ClinicOfficeAttributesFragment = { __typename: '_E_ClinicOffice', id: string, officeNumber?: string | null, clinic: { __typename?: '_E_Clinic', id: string, name?: string | null } };
+
+export type ClinicTableAttributesFragment = { __typename: '_E_ClinicTable', id: string, beginDate: any, endDate: any, clinicOffice: { __typename?: '_E_ClinicOffice', id: string, officeNumber?: string | null }, customer: { __typename?: '_G_CustomerReference', entityId?: string | null, entity?: { __typename?: '_E_Customer', person: { __typename?: '_G_PersonReference', entityId?: string | null, entity?: { __typename?: '_E_Person', firstName: string, lastName: string } | null } } | null }, clinicDoctor: { __typename?: '_E_ClinicDoctor', id: string, doctor: { __typename?: '_G_DoctorReference', entityId?: string | null, entity?: { __typename?: '_E_Doctor', person: { __typename?: '_G_PersonReference', entityId?: string | null, entity?: { __typename?: '_E_Person', firstName: string, lastName: string } | null } } | null } } };
+
+export type CustomerAttributesFragment = { __typename: '_E_Customer', id: string, insurancePolicyNumber: string, phoneNumber?: string | null, person: { __typename?: '_G_PersonReference', entityId?: string | null, entity?: { __typename?: '_E_Person', firstName: string, lastName: string } | null } };
+
+export type DoctorAttributesFragment = { __typename: '_E_Doctor', id: string, doctorType: { __typename?: '_E_DoctorType', id: string, name: string }, person: { __typename?: '_G_PersonReference', entityId?: string | null, entity?: { __typename?: '_E_Person', firstName: string, lastName: string } | null } };
+
 export type DoctorTypeAttributesFragment = { __typename: '_E_DoctorType', id: string, name: string, description?: string | null };
+
+export type PersonAttributesFragment = { __typename: '_E_Person', id: string, firstName: string, lastName: string, inn?: string | null, birthDate?: any | null };
