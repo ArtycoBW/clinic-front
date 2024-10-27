@@ -5,50 +5,68 @@ import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { doctors, specializations } from './consts'
-
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { useState } from 'react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { useSearchDoctor } from '@/entities/doctor/hooks/useSearchDoctor'
+import { Spinner } from '@/components/spinner'
+import { toast } from '@/hooks/use-toast'
+import { useCreateDoctor } from '@/entities/doctor/hooks/useCreateDoctor'
+import { useSearchDoctorType } from '@/entities/doctorType/hooks/useSearchDoctorType'
+import { useUpdateDoctor } from '@/entities/doctor/hooks/useUpdateDoctor'
+import { useDeleteDoctor } from '@/entities/doctor/hooks/useDeleteDoctor'
+import { useDeleteDoctorType } from '@/entities/doctorType/hooks/useDeleteDoctorType'
+import { useUpdateOrCreateDocType } from '@/entities/doctorType/hooks/useUpdateOrCreateDocType'
+import { useSearchPerson } from '@/entities/person/hooks/useSearchPerson'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { emptyRowField } from '@/applicationConstants'
 
 const doctorSchema = z.object({
-  name: z.string().min(1, 'Имя не должно быть пустым'),
-  surname: z.string().min(1, 'Фамилия не должна быть пустой'),
-  birthday: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Дата рождения должна быть в формате YYYY-MM-DD'),
-  inn: z.string().length(10, 'ИНН должен состоять из 10 цифр'),
-  specialization: z.string().min(10, 'Специальность должна содержать минимум 10 символов'),
+  id: z.string().optional(),
+  specialization: z.string(),
 })
 
 const specializationSchema = z.object({
-  title: z.string().min(1, 'Специальность не должна быть пустой'),
+  name: z.string().min(1, 'Название не должно быть пустым'),
   description: z.string().min(1, 'Специальность не должна быть пустой'),
+  id: z.string().min(1, 'Заполните идентификатор специальности'),
 })
 
 export default function DoctorsPage() {
-  const [_, setSelectedDoctor] = useState<z.infer<typeof doctorSchema>>({
-    name: 'Artyco',
-    surname: 'B',
-    birthday: '2003-02-26',
-    inn: '1234567890',
-    specialization: '123123',
-  })
+  const [_, setSelectedDoctor] = useState<z.infer<typeof doctorSchema>>()
+  const [_selectedSpecialization, setSelectedSpecialization] = useState<z.infer<typeof specializationSchema>>()
 
-  const [selectedSpecialization, setSelectedSpecialization] = useState<z.infer<typeof specializationSchema>>({
-    title: 'Artyco',
-    description: 'B',
-  })
+  const { persons, loading, error } = useSearchPerson('')
+
+  const { doctors, loading: doctorsLoading, error: doctorsError, invalidateCache } = useSearchDoctor('')
+  const { executeMutation: createDoctor, loading: createLoading, error: createError } = useCreateDoctor()
+  const { executeMutation: updateDoctor, loading: updateLoading, error: updateError } = useUpdateDoctor()
+  const { executeMutation: deleteDoctor, loading: deleteLoading, error: deleteError } = useDeleteDoctor()
+
+  const {
+    doctors: types,
+    loading: typesLoading,
+    error: typesError,
+    invalidateCache: invalidateCacheType,
+  } = useSearchDoctorType('')
+  const {
+    executeMutation: updateDoctorType,
+    loading: updateTypeLoading,
+    error: updateTypeError,
+  } = useUpdateOrCreateDocType()
+  const {
+    executeMutation: deleteDoctorType,
+    loading: deleteLoadingType,
+    error: deleteErrorType,
+  } = useDeleteDoctorType()
 
   const addForm = useForm<z.infer<typeof doctorSchema>>({
     resolver: zodResolver(doctorSchema),
     defaultValues: {
-      name: '',
-      surname: '',
-      birthday: '',
-      inn: '',
+      id: '',
       specialization: '',
     },
   })
@@ -56,10 +74,6 @@ export default function DoctorsPage() {
   const editForm = useForm<z.infer<typeof doctorSchema>>({
     resolver: zodResolver(doctorSchema),
     defaultValues: {
-      name: '',
-      surname: '',
-      birthday: '',
-      inn: '',
       specialization: '',
     },
   })
@@ -67,33 +81,99 @@ export default function DoctorsPage() {
   const addSpecializationForm = useForm<z.infer<typeof specializationSchema>>({
     resolver: zodResolver(specializationSchema),
     defaultValues: {
-      title: '',
+      name: '',
       description: '',
+      id: '',
     },
   })
 
-  const editSpecializationForm = useForm<z.infer<typeof specializationSchema>>({
-    resolver: zodResolver(specializationSchema),
-    defaultValues: {
-      title: '',
-      description: '',
-    },
-  })
+  const handleAddSubmit = async (values: z.infer<typeof doctorSchema>) => {
+    if (values.id === undefined) return
 
-  const handleAddSubmit = (values: z.infer<typeof doctorSchema>) => {
-    console.log('Добавление доктора:', values)
+    try {
+      const { data } = await createDoctor(values.specialization, values.id)
+
+      toast({
+        title: `Специалист ${data?.packet.createDoctor.person.entity.firstName} ${data?.packet.createDoctor.person.entity.lastName} добавлен`,
+      })
+
+      invalidateCache()
+    } catch {
+      toast({
+        title: createError?.message,
+        variant: 'destructive',
+      })
+    }
   }
 
-  const handleEditSubmit = (values: z.infer<typeof doctorSchema>) => {
-    console.log('Редактирование доктора:', values)
+  const handleEditSubmit = async (values: z.infer<typeof doctorSchema>, id: string, personId: string) => {
+    try {
+      const { data } = await updateDoctor(id, values.specialization, personId)
+
+      toast({
+        title: `Специалист ${data?.packet.updateDoctor.person.entity.firstName} ${data?.packet.updateDoctor.person.entity.lastName} обновлен успешно`,
+      })
+
+      invalidateCache()
+    } catch {
+      toast({
+        title: updateError?.message,
+        variant: 'destructive',
+      })
+    }
   }
 
-  const handleSpecializationAddSubmit = (values: z.infer<typeof specializationSchema>) => {
-    console.log('Добавление доктора:', values)
+  const handleDelete = async (id: string) => {
+    try {
+      await deleteDoctor(id)
+
+      toast({
+        title: `Специалист успешно удален`,
+      })
+
+      invalidateCache()
+    } catch {
+      toast({
+        title: deleteError?.message,
+        variant: 'destructive',
+      })
+    }
   }
 
-  const handleSpecializationEditSubmit = (values: z.infer<typeof specializationSchema>) => {
-    console.log('Редактирование доктора:', values)
+  const handleSpecializationAddUpdateSubmit = async (values: z.infer<typeof specializationSchema>) => {
+    const { name, description, id } = values
+
+    try {
+      const { data } = await updateDoctorType(name, description, id)
+
+      toast({
+        title: `Специализация ${data?.dictionaryPacket?.updateOrCreateDoctorType?.returning?.name} добавлена/обновлена`,
+      })
+
+      invalidateCacheType()
+    } catch {
+      toast({
+        title: updateTypeError?.message,
+        variant: 'destructive',
+      })
+    }
+  }
+
+  const handleDeleteType = async (id: string) => {
+    try {
+      await deleteDoctorType(id)
+
+      toast({
+        title: `Специальность успешно удалена`,
+      })
+
+      invalidateCacheType()
+    } catch {
+      toast({
+        title: deleteErrorType?.message,
+        variant: 'destructive',
+      })
+    }
   }
 
   const openEditDialog = (doctor: z.infer<typeof doctorSchema>) => {
@@ -103,7 +183,15 @@ export default function DoctorsPage() {
 
   const openSpecializationEditDialog = (specialization: z.infer<typeof specializationSchema>) => {
     setSelectedSpecialization(specialization)
-    editSpecializationForm.reset(specialization)
+    addSpecializationForm.reset(specialization)
+  }
+
+  if (doctorsError || typesError) {
+    toast({
+      title: (doctorsError || typesError)?.message,
+      description: 'Произошла ошибка при загрузке данных',
+      variant: 'destructive',
+    })
   }
 
   return (
@@ -131,61 +219,23 @@ export default function DoctorsPage() {
                     <Form {...addForm}>
                       <form onSubmit={addForm.handleSubmit(handleAddSubmit)} className="flex flex-col gap-4">
                         <FormField
-                          name="name"
+                          name="id"
                           control={addForm.control}
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Имя</FormLabel>
-                              <FormControl>
-                                <Input {...field} disabled={false} placeholder="Введите имя доктора" type="text" />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-
-                        <FormField
-                          name="surname"
-                          control={addForm.control}
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Фамилия</FormLabel>
-                              <FormControl>
-                                <Input {...field} disabled={false} placeholder="Введите фамилию доктора" type="text" />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-
-                        <FormField
-                          name="birthday"
-                          control={addForm.control}
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Дата рождения</FormLabel>
-                              <FormControl>
-                                <Input
-                                  {...field}
-                                  disabled={false}
-                                  placeholder="Введите дату рождения (YYYY-MM-DD)"
-                                  type="text"
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-
-                        <FormField
-                          name="inn"
-                          control={addForm.control}
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>ИНН</FormLabel>
-                              <FormControl>
-                                <Input {...field} disabled={false} placeholder="Введите ИНН" type="text" />
-                              </FormControl>
+                              <FormLabel>ID</FormLabel>
+                              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                <FormControl>
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Выберите" />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  {persons.map((el) => (
+                                    <SelectItem value={el.id}>{el.firstName + ' ' + el.lastName}</SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
                               <FormMessage />
                             </FormItem>
                           )}
@@ -196,24 +246,27 @@ export default function DoctorsPage() {
                           control={addForm.control}
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Специальность</FormLabel>
-                              <FormControl>
-                              <Select>
+                              <FormLabel>ID</FormLabel>
+                              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                <FormControl>
                                   <SelectTrigger>
-                                  <SelectValue placeholder="Theme" />
-                                </SelectTrigger>
-                                  <SelectContent>
-                                    <SelectItem value="light">Light</SelectItem>
-                                    <SelectItem value="dark">Dark</SelectItem>
-                                    <SelectItem value="system">System</SelectItem>
-                                  </SelectContent>
-                                  </Select>
-                              </FormControl>
+                                    <SelectValue placeholder="Выберите" />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  {types.map((el) => (
+                                    <SelectItem value={el.id}>{el.name}</SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
                               <FormMessage />
                             </FormItem>
                           )}
                         />
-                        <Button disabled={false} size="lg" className="w-full bg-[#51dca4] text-white">
+                        <Button
+                          disabled={createLoading || loading || typesLoading || !!error}
+                          size="lg"
+                          className="w-full bg-[#51dca4] text-white">
                           Добавить
                         </Button>
                       </form>
@@ -222,153 +275,96 @@ export default function DoctorsPage() {
                 </DialogContent>
               </Dialog>
             </div>
-            <div className="max-h-[70vh] overflow-y-auto w-full">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Имя</TableHead>
-                    <TableHead>Фамилия</TableHead>
-                    <TableHead>Дата рождения</TableHead>
-                    <TableHead>Инн</TableHead>
-                    <TableHead>Номер телефона</TableHead>
-                    <TableHead>Страховой полис</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {doctors.map((doctor) => (
-                    <TableRow key={doctor.name}>
-                      <TableCell>{doctor.name}</TableCell>
-                      <TableCell>{doctor.surname}</TableCell>
-                      <TableCell>{doctor.birthday}</TableCell>
-                      <TableCell>{doctor.inn}</TableCell>
-                      <TableCell>{doctor.specialization}</TableCell>
-                      <TableCell>
-                        <Button className="bg-[#f2f5ff] rounded-3xl py-4 px-5 my-2" variant="secondary">
-                          <span className="text-[#6A6E83]">Удалить</span>
-                        </Button>
-                      </TableCell>
-                      <TableCell>
-                        <Dialog>
-                          <DialogTrigger asChild>
-                            <Button
-                              className="bg-[#f2f5ff] rounded-3xl py-4 px-5 my-2 border-[#0065FF]"
-                              variant="outline"
-                              onClick={() => openEditDialog(doctor)}>
-                              <span className="text-[#0065FF]">Изменить</span>
-                            </Button>
-                          </DialogTrigger>
-                          <DialogContent className="sm:max-w-[425px]">
-                            <DialogHeader>
-                              <DialogTitle>Редактирование доктора</DialogTitle>
-                            </DialogHeader>
-                            <div className="grid gap-4 py-4">
-                              <Form {...editForm}>
-                                <form
-                                  onSubmit={editForm.handleSubmit(handleEditSubmit)}
-                                  className="flex flex-col gap-4">
-                                  <FormField
-                                    name="name"
-                                    control={editForm.control}
-                                    render={({ field }) => (
-                                      <FormItem>
-                                        <FormLabel>Имя</FormLabel>
-                                        <FormControl>
-                                          <Input
-                                            {...field}
-                                            disabled={false}
-                                            placeholder="Введите имя доктора"
-                                            type="text"
-                                          />
-                                        </FormControl>
-                                        <FormMessage />
-                                      </FormItem>
-                                    )}
-                                  />
-
-                                  <FormField
-                                    name="surname"
-                                    control={editForm.control}
-                                    render={({ field }) => (
-                                      <FormItem>
-                                        <FormLabel>Фамилия</FormLabel>
-                                        <FormControl>
-                                          <Input
-                                            {...field}
-                                            disabled={false}
-                                            placeholder="Введите фамилию доктора"
-                                            type="text"
-                                          />
-                                        </FormControl>
-                                        <FormMessage />
-                                      </FormItem>
-                                    )}
-                                  />
-
-                                  <FormField
-                                    name="birthday"
-                                    control={editForm.control}
-                                    render={({ field }) => (
-                                      <FormItem>
-                                        <FormLabel>Дата рождения</FormLabel>
-                                        <FormControl>
-                                          <Input
-                                            {...field}
-                                            disabled={false}
-                                            placeholder="Введите дату рождения (YYYY-MM-DD)"
-                                            type="text"
-                                          />
-                                        </FormControl>
-                                        <FormMessage />
-                                      </FormItem>
-                                    )}
-                                  />
-
-                                  <FormField
-                                    name="inn"
-                                    control={editForm.control}
-                                    render={({ field }) => (
-                                      <FormItem>
-                                        <FormLabel>ИНН</FormLabel>
-                                        <FormControl>
-                                          <Input {...field} disabled={false} placeholder="Введите ИНН" type="text" />
-                                        </FormControl>
-                                        <FormMessage />
-                                      </FormItem>
-                                    )}
-                                  />
-
-                                  <FormField
-                                    name="specialization"
-                                    control={editForm.control}
-                                    render={({ field }) => (
-                                      <FormItem>
-                                        <FormLabel>Страховой полис</FormLabel>
-                                        <FormControl>
-                                          <Input
-                                            {...field}
-                                            disabled={false}
-                                            placeholder="Введите номер страхового полиса"
-                                            type="text"
-                                          />
-                                        </FormControl>
-                                        <FormMessage />
-                                      </FormItem>
-                                    )}
-                                  />
-                                  <Button disabled={false} size="lg" className="w-full bg-[#51dca4] text-white">
-                                    Изменить
-                                  </Button>
-                                </form>
-                              </Form>
-                            </div>
-                          </DialogContent>
-                        </Dialog>
-                      </TableCell>
+            {!doctors || (doctorsLoading && <Spinner />)}
+            {!!doctors.length && (
+              <div className="max-h-[70vh] overflow-y-auto w-full">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Имя</TableHead>
+                      <TableHead>Фамилия</TableHead>
+                      <TableHead>Специальность</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
+                  </TableHeader>
+                  <TableBody>
+                    {doctors.map((doctor) => (
+                      <TableRow key={doctor.id}>
+                        <TableCell>{doctor.person.entity.firstName}</TableCell>
+                        <TableCell>{doctor.person.entity.lastName}</TableCell>
+                        <TableCell>{doctor.doctorType.name}</TableCell>
+                        <TableCell>
+                          <Button
+                            disabled={deleteLoading}
+                            onClick={() => {
+                              return handleDelete(doctor.id)
+                            }}
+                            className="bg-[#f2f5ff] rounded-3xl py-4 px-5 my-2"
+                            variant="secondary">
+                            <span className="text-[#6A6E83]">Удалить</span>
+                          </Button>
+                        </TableCell>
+                        <TableCell>
+                          <Dialog>
+                            <DialogTrigger asChild>
+                              <Button
+                                className="bg-[#f2f5ff] rounded-3xl py-4 px-5 my-2 border-[#0065FF]"
+                                variant="outline"
+                                onClick={() => openEditDialog({ specialization: doctor.doctorType.name })}>
+                                <span className="text-[#0065FF]">Изменить</span>
+                              </Button>
+                            </DialogTrigger>
+                            <DialogContent className="sm:max-w-[425px]">
+                              <DialogHeader>
+                                <DialogTitle>Редактирование доктора</DialogTitle>
+                              </DialogHeader>
+                              <div className="grid gap-4 py-4">
+                                <Form {...editForm}>
+                                  <form
+                                    onSubmit={editForm.handleSubmit((val) => {
+                                      return handleEditSubmit(val, doctor.id, doctor.person.entityId)
+                                    })}
+                                    className="flex flex-col gap-4">
+                                    <FormField
+                                      name="specialization"
+                                      control={editForm.control}
+                                      render={({ field }) => (
+                                        <FormItem>
+                                          <FormLabel>ID</FormLabel>
+                                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                            <FormControl>
+                                              <SelectTrigger>
+                                                <SelectValue placeholder="Выберите" />
+                                              </SelectTrigger>
+                                            </FormControl>
+                                            <SelectContent>
+                                              {types.map((el) => (
+                                                <SelectItem value={el.id}>{el.name}</SelectItem>
+                                              ))}
+                                            </SelectContent>
+                                          </Select>
+                                          <FormMessage />
+                                        </FormItem>
+                                      )}
+                                    />
+                                    <Button
+                                      disabled={updateLoading || typesLoading}
+                                      type="submit"
+                                      size="lg"
+                                      className="w-full bg-[#51dca4] text-white">
+                                      Изменить
+                                    </Button>
+                                  </form>
+                                </Form>
+                              </div>
+                            </DialogContent>
+                          </Dialog>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
           </TabsContent>
           <TabsContent value="specializations" className="w-[85vw]">
             <div className="flex items-center gap-6">
@@ -385,10 +381,24 @@ export default function DoctorsPage() {
                   <div className="grid gap-4 py-4">
                     <Form {...addSpecializationForm}>
                       <form
-                        onSubmit={addSpecializationForm.handleSubmit(handleSpecializationAddSubmit)}
+                        onSubmit={addSpecializationForm.handleSubmit(handleSpecializationAddUpdateSubmit)}
                         className="flex flex-col gap-4">
                         <FormField
-                          name="title"
+                          name="id"
+                          control={addSpecializationForm.control}
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>ID</FormLabel>
+                              <FormControl>
+                                <Input {...field} disabled={false} placeholder="Введите ID" type="text" />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          name="name"
                           control={addSpecializationForm.control}
                           render={({ field }) => (
                             <FormItem>
@@ -415,7 +425,11 @@ export default function DoctorsPage() {
                           )}
                         />
 
-                        <Button disabled={false} size="lg" className="w-full bg-[#51dca4] text-white">
+                        <Button
+                          type="submit"
+                          disabled={updateTypeLoading}
+                          size="lg"
+                          className="w-full bg-[#51dca4] text-white">
                           Добавить
                         </Button>
                       </form>
@@ -432,84 +446,112 @@ export default function DoctorsPage() {
                     <TableHead>Описание</TableHead>
                   </TableRow>
                 </TableHeader>
-                <TableBody>
-                  {specializations.map((specialization) => (
-                    <TableRow key={specialization.title}>
-                      <TableCell>{specialization.title}</TableCell>
-                      <TableCell>{specialization.description}</TableCell>
-                      <TableCell>
-                        <Button className="bg-[#f2f5ff] rounded-3xl py-4 px-5 my-2" variant="secondary">
-                          <span className="text-[#6A6E83]">Удалить</span>
-                        </Button>
-                      </TableCell>
-                      <TableCell>
-                        <Dialog>
-                          <DialogTrigger asChild>
-                            <Button
-                              className="bg-[#f2f5ff] rounded-3xl py-4 px-5 my-2 border-[#0065FF]"
-                              variant="outline"
-                              onClick={() => openSpecializationEditDialog(specialization)}>
-                              <span className="text-[#0065FF]">Изменить</span>
-                            </Button>
-                          </DialogTrigger>
-                          <DialogContent className="sm:max-w-[425px]">
-                            <DialogHeader>
-                              <DialogTitle>Редактирование специальности</DialogTitle>
-                            </DialogHeader>
-                            <div className="grid gap-4 py-4">
-                              <Form {...editSpecializationForm}>
-                                <form
-                                  onSubmit={editSpecializationForm.handleSubmit(handleSpecializationEditSubmit)}
-                                  className="flex flex-col gap-4">
-                                  <FormField
-                                    name="title"
-                                    control={editSpecializationForm.control}
-                                    render={({ field }) => (
-                                      <FormItem>
-                                        <FormLabel>Наименование</FormLabel>
-                                        <FormControl>
-                                          <Input
-                                            {...field}
-                                            disabled={false}
-                                            placeholder="Введите наименование"
-                                            type="text"
-                                          />
-                                        </FormControl>
-                                        <FormMessage />
-                                      </FormItem>
-                                    )}
-                                  />
+                {!types || (typesLoading && <Spinner />)}
+                {!!types.length && (
+                  <TableBody>
+                    {types.map((specialization) => (
+                      <TableRow key={specialization.id}>
+                        <TableCell>{specialization.name}</TableCell>
+                        <TableCell>{specialization.description ?? emptyRowField}</TableCell>
+                        <TableCell>
+                          <Button
+                            disabled={deleteLoadingType}
+                            onClick={() => {
+                              return handleDeleteType(specialization.id)
+                            }}
+                            className="bg-[#f2f5ff] rounded-3xl py-4 px-5 my-2"
+                            variant="secondary">
+                            <span className="text-[#6A6E83]">Удалить</span>
+                          </Button>
+                        </TableCell>
+                        <TableCell>
+                          <Dialog>
+                            <DialogTrigger asChild>
+                              <Button
+                                className="bg-[#f2f5ff] rounded-3xl py-4 px-5 my-2 border-[#0065FF]"
+                                variant="outline"
+                                onClick={() => openSpecializationEditDialog(specialization)}>
+                                <span className="text-[#0065FF]">Изменить</span>
+                              </Button>
+                            </DialogTrigger>
+                            <DialogContent className="sm:max-w-[425px]">
+                              <DialogHeader>
+                                <DialogTitle>Редактирование специальности</DialogTitle>
+                              </DialogHeader>
+                              <div className="grid gap-4 py-4">
+                                <Form {...addSpecializationForm}>
+                                  <form
+                                    onSubmit={addSpecializationForm.handleSubmit(handleSpecializationAddUpdateSubmit)}
+                                    className="flex flex-col gap-4">
+                                    <FormField
+                                      name="id"
+                                      control={addSpecializationForm.control}
+                                      render={({ field }) => (
+                                        <FormItem>
+                                          <FormLabel>ID</FormLabel>
+                                          <FormControl>
+                                            <Input {...field} disabled={false} placeholder="Введите ID" type="text" />
+                                          </FormControl>
+                                          <FormMessage />
+                                        </FormItem>
+                                      )}
+                                    />
 
-                                  <FormField
-                                    name="description"
-                                    control={editSpecializationForm.control}
-                                    render={({ field }) => (
-                                      <FormItem>
-                                        <FormLabel>Описание</FormLabel>
-                                        <FormControl>
-                                          <Input
-                                            {...field}
-                                            disabled={false}
-                                            placeholder="Введите описание"
-                                            type="text"
-                                          />
-                                        </FormControl>
-                                        <FormMessage />
-                                      </FormItem>
-                                    )}
-                                  />
-                                  <Button disabled={false} size="lg" className="w-full bg-[#51dca4] text-white">
-                                    Изменить
-                                  </Button>
-                                </form>
-                              </Form>
-                            </div>
-                          </DialogContent>
-                        </Dialog>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
+                                    <FormField
+                                      name="name"
+                                      control={addSpecializationForm.control}
+                                      render={({ field }) => (
+                                        <FormItem>
+                                          <FormLabel>Наименование</FormLabel>
+                                          <FormControl>
+                                            <Input
+                                              {...field}
+                                              disabled={false}
+                                              placeholder="Введите специальность"
+                                              type="text"
+                                            />
+                                          </FormControl>
+                                          <FormMessage />
+                                        </FormItem>
+                                      )}
+                                    />
+
+                                    <FormField
+                                      name="description"
+                                      control={addSpecializationForm.control}
+                                      render={({ field }) => (
+                                        <FormItem>
+                                          <FormLabel>Описание</FormLabel>
+                                          <FormControl>
+                                            <Input
+                                              {...field}
+                                              disabled={false}
+                                              placeholder="Введите описание"
+                                              type="text"
+                                            />
+                                          </FormControl>
+                                          <FormMessage />
+                                        </FormItem>
+                                      )}
+                                    />
+
+                                    <Button
+                                      type="submit"
+                                      disabled={updateTypeLoading}
+                                      size="lg"
+                                      className="w-full bg-[#51dca4] text-white">
+                                      Изменить
+                                    </Button>
+                                  </form>
+                                </Form>
+                              </div>
+                            </DialogContent>
+                          </Dialog>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                )}
               </Table>
             </div>
           </TabsContent>
