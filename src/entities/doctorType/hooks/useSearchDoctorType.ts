@@ -7,8 +7,8 @@ import { useCallback, useEffect } from 'react'
 
 export const useSearchDoctorType = (searchStr: string) => {
   const { data, loading, error, refetch } = useQuery<SearchDoctorTypeResponse>(SEARCH_DOCTOR_TYPE, {
-    variables: { searchStr: 'THERAPIST' },
-    skip: !searchStr, // Пропустить запрос, если searchStr пустая строка
+    variables: { searchStr },
+    // skip: !searchStr, // Пропустить запрос, если searchStr пустая строка
   })
 
   useEffect(() => {

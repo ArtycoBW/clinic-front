@@ -1,15 +1,15 @@
 export interface DoctorType {
-  id: string;
-  __typename: string;
-  name: string;
-  description: string;
+  id: string
+  __typename: string
+  name: string
+  description: string
 }
 
 export interface SearchDoctorTypeResponse {
   searchDoctorType: {
-    elems: DoctorType[];
-    count: number;
-  };
+    elems: DoctorType[]
+    count: number
+  }
 }
 
 export interface UpdateOrCreateDoctorTypeResponse {
@@ -17,32 +17,32 @@ export interface UpdateOrCreateDoctorTypeResponse {
   dictionaryPacket: {
     updateOrCreateDoctorType: {
       returning: {
-        id: string;
-        name: string;
-        description: string;
-      }[];
-    };
-  };
+        id: string
+        name: string
+        description: string
+      }
+    }
+  }
 }
 
 export interface UpdateOrCreateDoctorTypeVariables {
-  id: string;
-  name: string;
-  description?: string; // Этот параметр может быть необязательным
+  id?: string
+  name: string
+  description?: string // Этот параметр может быть необязательным
 }
 
 export interface DeleteDoctorTypeResponse {
   dictionaryPacket: {
     updateOrCreateDoctorType: {
       returning: {
-        id: string;
-        name: string;
-        description: string;
-      }[];
-    };
-  };
+        id: string
+        name: string
+        description: string
+      }[]
+    }
+  }
 }
 
 export interface DeleteDoctorTypeVariables {
-  id: string;
+  id: string
 }
