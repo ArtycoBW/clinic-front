@@ -1,7 +1,0 @@
-import { Sidebar } from '@/components/ui/sidebar'
-
-export const SidebarCustom = () => {
-  return (
-    <div></div>
-  )
-}
