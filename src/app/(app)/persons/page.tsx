@@ -126,7 +126,7 @@ export default function ClientPage() {
   }
 
   return (
-    <div className="w-full">
+    <div className="w-full max-h-[90vh] overflow-hidden">
       <Header path="Главная" />
       <div className="bg-white gap-6 mt-20 mx-12 mb-6 p-4 rounded-xl">
         <div className="flex items-center gap-6">
@@ -216,6 +216,7 @@ export default function ClientPage() {
         </div>
         {!persons || (loading && <Spinner />)}
         {persons && (
+          <div className="max-h-[70vh] overflow-y-auto w-full">
           <Table className="max-h-[100px]">
             <TableHeader>
               <TableRow>
@@ -353,6 +354,7 @@ export default function ClientPage() {
               ))}
             </TableBody>
           </Table>
+          </div>
         )}
       </div>
     </div>

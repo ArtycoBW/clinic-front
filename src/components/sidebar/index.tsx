@@ -15,7 +15,7 @@ const Sidebar = () => {
   const { isSidebarCollapsed } = useGlobalStore()
 
   const sidebarClassNames = `relative flex flex-col h-[100vh] justify-between shadow-xl
-    transition-all duration-300 ease h-full z-40 dark:bg-black overflow-y-auto bg-white rounded-r-3xl min-w-72
+    transition-all duration-300 ease h-full z-40 dark:bg-black overflow-y-auto bg-white rounded-r-3xl min-w-80
     ${isSidebarCollapsed ? 'w-0 hidden' : 'w-72'}
   `
 
@@ -47,7 +47,7 @@ const Sidebar = () => {
         </nav>
 
         <Button
-          className="bg-[#77deb5] rounded-xl py-4 px-5 mx-6 mt-60"
+          className="bg-[#77deb5] rounded-xl py-4 px-5 mx-6 mt-28"
           onClick={() => keycloak?.logout()}
         >
           <span className="text-white">Выйти</span>

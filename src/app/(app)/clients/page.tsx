@@ -12,22 +12,21 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 
 const clientSchema = z.object({
+  id: z.array(z.string()),
   name: z.string().min(1, 'Имя не должно быть пустым'),
   surname: z.string().min(1, 'Фамилия не должна быть пустой'),
-  birthday: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Дата рождения должна быть в формате YYYY-MM-DD'),
-  inn: z.string().length(10, 'ИНН должен состоять из 10 цифр'),
   number: z.string().min(10, 'Номер телефона должен содержать минимум 10 символов'),
   insurancePolicy: z.string().min(1, 'Номер страхового полиса не должен быть пустым'),
 })
 
 export default function ClientPage() {
   const [_, setSelectedClient] = useState<z.infer<typeof clientSchema>>({
+    id: ['1', '2'],
     name: 'Artyco',
     surname: 'B',
-    birthday: '2003-02-26',
-    inn: '1234567890',
     number: '89812381238123',
     insurancePolicy: '123123',
   })
@@ -35,10 +34,7 @@ export default function ClientPage() {
   const addForm = useForm<z.infer<typeof clientSchema>>({
     resolver: zodResolver(clientSchema),
     defaultValues: {
-      name: '',
-      surname: '',
-      birthday: '',
-      inn: '',
+      id: [],
       number: '',
       insurancePolicy: '',
     },
@@ -47,12 +43,8 @@ export default function ClientPage() {
   const editForm = useForm<z.infer<typeof clientSchema>>({
     resolver: zodResolver(clientSchema),
     defaultValues: {
-      name: '',
-      surname: '',
-      birthday: '',
-      inn: '',
+      id: [],
       number: '',
-      insurancePolicy: '',
     },
   })
 
@@ -70,10 +62,10 @@ export default function ClientPage() {
   }
 
   return (
-    <div className="w-full max-h-[90vh] overflow-hidden">
+    <div className="w-full h-full overflow-hidden">
       <Header path="Главная" />
       <div className="bg-white gap-6 mt-20 mx-12 mb-6 p-4 rounded-xl">
-        <div className="flex items-center gap-6">
+        <div className="flex items-center gap-6 max-h-[85vh] overflow-y-auto">
           <h2 className="text-[#7f49f3] font-bold text-xl">Все клиенты </h2>
           <Dialog>
             <DialogTrigger asChild>
@@ -89,13 +81,22 @@ export default function ClientPage() {
                 <Form {...addForm}>
                   <form onSubmit={addForm.handleSubmit(handleAddSubmit)} className="flex flex-col gap-4">
                     <FormField
-                      name="name"
+                      name="id"
                       control={addForm.control}
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Имя</FormLabel>
+                          <FormLabel>ID</FormLabel>
                           <FormControl>
-                            <Input {...field} disabled={false} placeholder="Введите имя пациента" type="text" />
+                            <Select>
+                            <SelectTrigger>
+                            <SelectValue placeholder="Theme" />
+                          </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="light">Light</SelectItem>
+                              <SelectItem value="dark">Dark</SelectItem>
+                              <SelectItem value="system">System</SelectItem>
+                            </SelectContent>
+                            </Select>
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -103,46 +104,13 @@ export default function ClientPage() {
                     />
 
                     <FormField
-                      name="surname"
+                      name="insurancePolicy"
                       control={addForm.control}
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Фамилия</FormLabel>
+                          <FormLabel>Cтраховой полис</FormLabel>
                           <FormControl>
-                            <Input {...field} disabled={false} placeholder="Введите фамилию пациента" type="text" />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      name="birthday"
-                      control={addForm.control}
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Дата рождения</FormLabel>
-                          <FormControl>
-                            <Input
-                              {...field}
-                              disabled={false}
-                              placeholder="Введите дату рождения (YYYY-MM-DD)"
-                              type="text"
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      name="inn"
-                      control={addForm.control}
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>ИНН</FormLabel>
-                          <FormControl>
-                            <Input {...field} disabled={false} placeholder="Введите ИНН" type="text" />
+                            <Input {...field} disabled={false} placeholder="Введите страховой полис" type="text" />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -163,25 +131,6 @@ export default function ClientPage() {
                       )}
                     />
 
-                    <FormField
-                      name="insurancePolicy"
-                      control={addForm.control}
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Страховой полис</FormLabel>
-                          <FormControl>
-                            <Input
-                              {...field}
-                              disabled={false}
-                              placeholder="Введите номер страхового полиса"
-                              type="text"
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
                     <Button disabled={false} size="lg" className="w-full bg-[#51dca4] text-white">
                       Добавить
                     </Button>
@@ -191,13 +140,11 @@ export default function ClientPage() {
             </DialogContent>
           </Dialog>
         </div>
+        <div className="max-h-[70vh] overflow-y-auto w-full">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Имя</TableHead>
-              <TableHead>Фамилия</TableHead>
-              <TableHead>Дата рождения</TableHead>
-              <TableHead>Инн</TableHead>
+              <TableHead>ID</TableHead>
               <TableHead>Номер телефона</TableHead>
               <TableHead>Страховой полис</TableHead>
             </TableRow>
@@ -205,10 +152,7 @@ export default function ClientPage() {
           <TableBody>
             {clients.map((client) => (
               <TableRow key={client.name}>
-                <TableCell>{client.name}</TableCell>
-                <TableCell>{client.surname}</TableCell>
-                <TableCell>{client.birthday}</TableCell>
-                <TableCell>{client.inn}</TableCell>
+                <TableCell>{client.id}</TableCell>
                 <TableCell>{client.number}</TableCell>
                 <TableCell>{client.insurancePolicy}</TableCell>
                 <TableCell>
@@ -233,65 +177,22 @@ export default function ClientPage() {
                         <Form {...editForm}>
                           <form onSubmit={editForm.handleSubmit(handleEditSubmit)} className="flex flex-col gap-4">
                             <FormField
-                              name="name"
+                              name="id"
                               control={editForm.control}
                               render={({ field }) => (
                                 <FormItem>
-                                  <FormLabel>Имя</FormLabel>
+                                  <FormLabel>ID</FormLabel>
                                   <FormControl>
-                                    <Input {...field} disabled={false} placeholder="Введите имя пациента" type="text" />
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-
-                            <FormField
-                              name="surname"
-                              control={editForm.control}
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel>Фамилия</FormLabel>
-                                  <FormControl>
-                                    <Input
-                                      {...field}
-                                      disabled={false}
-                                      placeholder="Введите фамилию пациента"
-                                      type="text"
-                                    />
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-
-                            <FormField
-                              name="birthday"
-                              control={editForm.control}
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel>Дата рождения</FormLabel>
-                                  <FormControl>
-                                    <Input
-                                      {...field}
-                                      disabled={false}
-                                      placeholder="Введите дату рождения (YYYY-MM-DD)"
-                                      type="text"
-                                    />
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-
-                            <FormField
-                              name="inn"
-                              control={editForm.control}
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel>ИНН</FormLabel>
-                                  <FormControl>
-                                    <Input {...field} disabled={false} placeholder="Введите ИНН" type="text" />
+                                  <Select>
+                                  <SelectTrigger>
+                                  <SelectValue placeholder="Theme" />
+                                </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="light">Light</SelectItem>
+                                    <SelectItem value="dark">Dark</SelectItem>
+                                    <SelectItem value="system">System</SelectItem>
+                                  </SelectContent>
+                                  </Select>
                                   </FormControl>
                                   <FormMessage />
                                 </FormItem>
@@ -317,24 +218,6 @@ export default function ClientPage() {
                               )}
                             />
 
-                            <FormField
-                              name="insurancePolicy"
-                              control={editForm.control}
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel>Страховой полис</FormLabel>
-                                  <FormControl>
-                                    <Input
-                                      {...field}
-                                      disabled={false}
-                                      placeholder="Введите номер страхового полиса"
-                                      type="text"
-                                    />
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
 
                             <Button disabled={false} size="lg" className="w-full bg-[#51dca4] text-white">
                               Изменить
@@ -349,6 +232,7 @@ export default function ClientPage() {
             ))}
           </TableBody>
         </Table>
+        </div>
       </div>
     </div>
   )

@@ -36,7 +36,7 @@ export default function DoctorsPage() {
     specialization: '123123',
   })
 
-  const [_, setSelectedSpecialization] = useState<z.infer<typeof specializationSchema>>({
+  const [selectedSpecialization, setSelectedSpecialization] = useState<z.infer<typeof specializationSchema>>({
     title: 'Artyco',
     description: 'B',
   })
