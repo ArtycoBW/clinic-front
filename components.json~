@@ -16,6 +16,6 @@
     "ui": "@/components/ui",
     "lib": "@/lib",
     "hooks": "@/hooks",
-    "applicationConstants": "@/applicationConstants"
+    "applicationConstants": "@/applicationConstants",
   }
 }
