@@ -5,36 +5,50 @@ import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { clients } from './consts'
-
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { useSearchCustomer } from '@/entities/customer/hooks/useSearchCustomer'
+import { emptyRowField } from '@/applicationConstants'
+import { Spinner } from '@/components/spinner'
+import { toast } from '@/hooks/use-toast'
+import { useCreateCustomer } from '@/entities/customer/hooks/useCreateCustomer'
+import { useSearchPerson } from '@/entities/person/hooks/useSearchPerson'
+import { useUpdateCustomer } from '@/entities/customer/hooks/useUpdateCustomer'
+import { useDeleteCustomer } from '@/entities/customer/hooks/useDeleteCustomer'
 
 const clientSchema = z.object({
-  id: z.array(z.string()),
-  name: z.string().min(1, 'Имя не должно быть пустым'),
-  surname: z.string().min(1, 'Фамилия не должна быть пустой'),
+  id: z.string().optional(),
   number: z.string().min(10, 'Номер телефона должен содержать минимум 10 символов'),
-  insurancePolicy: z.string().min(1, 'Номер страхового полиса не должен быть пустым'),
+  insurancePolicy: z.string().min(1, 'Номер страхового полиса не должен быть пустым').optional(),
 })
 
 export default function ClientPage() {
-  const [_, setSelectedClient] = useState<z.infer<typeof clientSchema>>({
-    id: ['1', '2'],
-    name: 'Artyco',
-    surname: 'B',
-    number: '89812381238123',
-    insurancePolicy: '123123',
-  })
+  const { persons, loading: personsLoading, error: personsError } = useSearchPerson('')
+
+  const { customers, loading: customersLoading, error: customersError, invalidateCache } = useSearchCustomer('')
+  const {
+    executeMutation: createCustomer,
+    loading: createCustomerLoading,
+    error: createCustomerError,
+  } = useCreateCustomer()
+  const {
+    executeMutation: updateCustomer,
+    loading: updateCustomerLoading,
+    error: updateCustomerError,
+  } = useUpdateCustomer()
+  const {
+    executeMutation: deleteCustomer,
+    error: deleteCustomerError,
+    loading: deleteCustomerLoading,
+  } = useDeleteCustomer()
 
   const addForm = useForm<z.infer<typeof clientSchema>>({
     resolver: zodResolver(clientSchema),
     defaultValues: {
-      id: [],
+      id: '',
       number: '',
       insurancePolicy: '',
     },
@@ -43,22 +57,73 @@ export default function ClientPage() {
   const editForm = useForm<z.infer<typeof clientSchema>>({
     resolver: zodResolver(clientSchema),
     defaultValues: {
-      id: [],
+      id: '',
       number: '',
     },
   })
 
-  const handleAddSubmit = (values: z.infer<typeof clientSchema>) => {
-    console.log('Добавление клиента:', values)
+  const handleAddSubmit = async (values: z.infer<typeof clientSchema>) => {
+    if (values.id === undefined || values.insurancePolicy === undefined) return
+
+    try {
+      const { data } = await createCustomer(values.id, values.insurancePolicy, values.number)
+
+      toast({
+        title: `Клиент ${data?.packet.createCustomer.person.entity.firstName} ${data?.packet.createCustomer.person.entity.lastName} добавлен`,
+      })
+
+      invalidateCache()
+    } catch {
+      toast({
+        title: createCustomerError?.message,
+        variant: 'destructive',
+      })
+    }
   }
 
-  const handleEditSubmit = (values: z.infer<typeof clientSchema>) => {
-    console.log('Редактирование клиента:', values)
+  const handleEditSubmit = async (values: z.infer<typeof clientSchema>, id: string) => {
+    try {
+      const { data } = await updateCustomer(id, values.number)
+
+      toast({
+        title: `Клиент ${data?.packet.updateCustomer.person.entity.firstName} ${data?.packet.updateCustomer.person.entity.lastName} обновлен успешно`,
+      })
+
+      invalidateCache()
+    } catch {
+      toast({
+        title: updateCustomerError?.message,
+        variant: 'destructive',
+      })
+    }
+  }
+
+  const handleDeleteCustomer = async (id: string) => {
+    try {
+      await deleteCustomer(id)
+
+      toast({
+        title: `Клиент удален успешно`,
+      })
+
+      invalidateCache()
+    } catch {
+      toast({
+        title: deleteCustomerError?.message,
+        variant: 'destructive',
+      })
+    }
   }
 
   const openEditDialog = (client: z.infer<typeof clientSchema>) => {
-    setSelectedClient(client)
     editForm.reset(client)
+  }
+
+  if (customersError) {
+    toast({
+      variant: 'destructive',
+      title: 'Произошла ошибка',
+    })
   }
 
   return (
@@ -86,18 +151,18 @@ export default function ClientPage() {
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>ID</FormLabel>
-                          <FormControl>
-                            <Select>
-                            <SelectTrigger>
-                            <SelectValue placeholder="Theme" />
-                          </SelectTrigger>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Выберите" />
+                              </SelectTrigger>
+                            </FormControl>
                             <SelectContent>
-                              <SelectItem value="light">Light</SelectItem>
-                              <SelectItem value="dark">Dark</SelectItem>
-                              <SelectItem value="system">System</SelectItem>
+                              {persons.map((el) => (
+                                <SelectItem value={el.id}>{el.firstName + ' ' + el.lastName}</SelectItem>
+                              ))}
                             </SelectContent>
-                            </Select>
-                          </FormControl>
+                          </Select>
                           <FormMessage />
                         </FormItem>
                       )}
@@ -131,7 +196,11 @@ export default function ClientPage() {
                       )}
                     />
 
-                    <Button disabled={false} size="lg" className="w-full bg-[#51dca4] text-white">
+                    <Button
+                      type="submit"
+                      disabled={personsLoading || !!personsError || createCustomerLoading}
+                      size="lg"
+                      className="w-full bg-[#51dca4] text-white">
                       Добавить
                     </Button>
                   </form>
@@ -140,99 +209,97 @@ export default function ClientPage() {
             </DialogContent>
           </Dialog>
         </div>
-        <div className="max-h-[70vh] overflow-y-auto w-full">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>ID</TableHead>
-              <TableHead>Номер телефона</TableHead>
-              <TableHead>Страховой полис</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {clients.map((client) => (
-              <TableRow key={client.name}>
-                <TableCell>{client.id}</TableCell>
-                <TableCell>{client.number}</TableCell>
-                <TableCell>{client.insurancePolicy}</TableCell>
-                <TableCell>
-                  <Button className="bg-[#f2f5ff] rounded-3xl py-4 px-5 my-2" variant="secondary">
-                    <span className="text-[#6A6E83]">Удалить</span>
-                  </Button>
-                </TableCell>
-                <TableCell>
-                  <Dialog>
-                    <DialogTrigger asChild>
-                      <Button className="bg-[#f2f5ff] rounded-3xl py-4 px-5 my-2 border-[#0065FF]" variant="outline">
-                        <span className="text-[#0065FF]" onClick={() => openEditDialog(client)}>
-                          Изменить
-                        </span>
+        {!customers || (customersLoading && <Spinner />)}
+        {!!customers?.length && (
+          <div className="max-h-[70vh] overflow-y-auto w-full">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Имя</TableHead>
+                  <TableHead>Фамилия</TableHead>
+                  <TableHead>Номер телефона</TableHead>
+                  <TableHead>Страховой полис</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {customers.map((client) => (
+                  <TableRow key={client.id}>
+                    <TableCell>{client.person.entity.firstName}</TableCell>
+                    <TableCell>{client.person.entity.lastName}</TableCell>
+                    <TableCell>{client.phoneNumber ?? emptyRowField}</TableCell>
+                    <TableCell>{client.insurancePolicyNumber ?? emptyRowField}</TableCell>
+                    <TableCell>
+                      <Button
+                        onClick={() => {
+                          return handleDeleteCustomer(client.id)
+                        }}
+                        className="bg-[#f2f5ff] rounded-3xl py-4 px-5 my-2"
+                        variant="secondary"
+                        disabled={deleteCustomerLoading}>
+                        <span className="text-[#6A6E83]">Удалить</span>
                       </Button>
-                    </DialogTrigger>
-                    <DialogContent className="sm:max-w-[425px]">
-                      <DialogHeader>
-                        <DialogTitle>Редактирование клиента</DialogTitle>
-                      </DialogHeader>
-                      <div className="grid gap-4 py-4">
-                        <Form {...editForm}>
-                          <form onSubmit={editForm.handleSubmit(handleEditSubmit)} className="flex flex-col gap-4">
-                            <FormField
-                              name="id"
-                              control={editForm.control}
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel>ID</FormLabel>
-                                  <FormControl>
-                                  <Select>
-                                  <SelectTrigger>
-                                  <SelectValue placeholder="Theme" />
-                                </SelectTrigger>
-                                  <SelectContent>
-                                    <SelectItem value="light">Light</SelectItem>
-                                    <SelectItem value="dark">Dark</SelectItem>
-                                    <SelectItem value="system">System</SelectItem>
-                                  </SelectContent>
-                                  </Select>
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-
-                            <FormField
-                              name="number"
-                              control={editForm.control}
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel>Номер телефона</FormLabel>
-                                  <FormControl>
-                                    <Input
-                                      {...field}
-                                      disabled={false}
-                                      placeholder="Введите номер телефона"
-                                      type="text"
-                                    />
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-
-
-                            <Button disabled={false} size="lg" className="w-full bg-[#51dca4] text-white">
+                    </TableCell>
+                    <TableCell>
+                      <Dialog>
+                        <DialogTrigger asChild>
+                          <Button
+                            className="bg-[#f2f5ff] rounded-3xl py-4 px-5 my-2 border-[#0065FF]"
+                            variant="outline">
+                            <span
+                              className="text-[#0065FF]"
+                              onClick={() => openEditDialog({ id: client.id, number: client.phoneNumber })}>
                               Изменить
-                            </Button>
-                          </form>
-                        </Form>
-                      </div>
-                    </DialogContent>
-                  </Dialog>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-        </div>
+                            </span>
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent className="sm:max-w-[425px]">
+                          <DialogHeader>
+                            <DialogTitle>Редактирование клиента</DialogTitle>
+                          </DialogHeader>
+                          <div className="grid gap-4 py-4">
+                            <Form {...editForm}>
+                              <form
+                                onSubmit={editForm.handleSubmit((val) => {
+                                  return handleEditSubmit(val, client.id)
+                                })}
+                                className="flex flex-col gap-4">
+                                <FormField
+                                  name="number"
+                                  control={editForm.control}
+                                  render={({ field }) => (
+                                    <FormItem>
+                                      <FormLabel>Номер телефона</FormLabel>
+                                      <FormControl>
+                                        <Input
+                                          {...field}
+                                          disabled={false}
+                                          placeholder="Введите номер телефона"
+                                          type="text"
+                                        />
+                                      </FormControl>
+                                      <FormMessage />
+                                    </FormItem>
+                                  )}
+                                />
+
+                                <Button
+                                  disabled={updateCustomerLoading}
+                                  size="lg"
+                                  className="w-full bg-[#51dca4] text-white">
+                                  Изменить
+                                </Button>
+                              </form>
+                            </Form>
+                          </div>
+                        </DialogContent>
+                      </Dialog>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        )}
       </div>
     </div>
   )
