@@ -1,0 +1,142 @@
+#ClinicDoctorWithAvailability - Фрагмент для получения доступности врача вместе с базовой информацией о враче и клинике
+fragment ClinicDoctorWithAvailability on _E_ClinicDoctor {
+  id
+  clinic {
+    id
+    name
+  }
+  doctor {
+    entityId
+    entity {
+      person {
+        entityId
+        entity {
+          firstName
+          lastName
+        }
+      }
+      doctorType {
+        id
+        name
+      }
+    }
+  }
+  clinicDoctorAvailabilityList {
+    ...ClinicDoctorAvailabilityAttributes
+  }
+}
+
+
+#DetailedClinicAttributes - Фрагмент для получения полной информации о клинике
+fragment DetailedClinicAttributes on _E_Clinic {
+  id
+  name
+  address
+  phone
+  email
+  classOfficeList {
+    id
+    officeNumber
+  }
+  clinicDoctorList {
+    ...ClinicDoctorWithAvailability
+  }
+}
+
+
+#Запрос для получения записей клиентов в клинике (с фильтрацией по дате и пагинацией)
+query paginatedClinicRecords(
+  $clinicId: String!,
+  $dateFrom: _DateTime!,
+  $dateTo: _DateTime!,
+  $limit: Int = 10,
+  $offset: Int = 0
+) {
+  searchClinicTable(
+    cond: "it.clinic.id == ${clinicId} && it.endDate >= ${dateFrom} && it.beginDate <= ${dateTo}",
+    limit: $limit,
+    offset: $offset
+  ) @strExpr(string: $clinicId, dateTimes: [$dateFrom, $dateTo]) {
+    elems {
+      ...ClinicTableAttributes
+    }
+  }
+}
+
+
+#Запрос для получения всех клиентов с фильтрацией по статусу
+query searchCustomers($status: String!, $limit: Int = 10, $offset: Int = 0) {
+  searchCustomer(cond: "it.status == ${status}", limit: $limit, offset: $offset) @strExpr(string: $status) {
+    elems {
+      ...CustomerAttributes
+    }
+  }
+}
+
+#Запрос для получения деталей клиники с врачами и их доступностью
+query getClinicWithDoctorsAndAvailability($clinicId: String!) {
+  getClinic(id: $clinicId) {
+    ...DetailedClinicAttributes
+  }
+}
+
+
+#Мутация для массового обновления записей
+mutation updateMultipleDoctors($ids: [ID!]!, $doctorTypeId: ID!) {
+  packet {
+    updateDoctors(inputs: $ids.map(id => ({
+      id: id,
+      doctorType: $doctorTypeId
+    }))) {
+      returning {
+        ...DoctorAttributes
+      }
+    }
+  }
+}
+
+#Мутация для активации/деактивации пользователей
+mutation toggleCustomerStatus($id: ID!, $status: Boolean!) {
+  packet {
+    updateCustomer(input: { id: $id, isActive: $status }) {
+      ...CustomerAttributes
+    }
+  }
+}
+
+
+#Мутация для создания связи между врачом и клиникой
+mutation linkDoctorToClinic($clinicId: ID!, $doctorId: ID!) {
+  packet {
+    createClinicDoctor(input: { clinic: $clinicId, doctor: { entityId: $doctorId } }) {
+      ...ClinicDoctorAttributes
+    }
+  }
+}
+
+
+#Подписки (для реального времени)
+#Подписка на обновления записей клиентов в клинике
+
+subscription onClinicTableUpdate($clinicId: ID!) {
+  clinicTableUpdated(clinicId: $clinicId) {
+    ...ClinicTableAttributes
+  }
+}
+
+
+#Подписка на изменения доступности врача
+subscription onDoctorAvailabilityChange($doctorId: ID!) {
+  doctorAvailabilityUpdated(doctorId: $doctorId) {
+    ...ClinicDoctorAvailabilityAttributes
+  }
+}
+
+# Подписка на добавление нового клиента
+subscription onNewCustomerAdded {
+  customerAdded {
+    ...CustomerAttributes
+  }
+}
+
+
