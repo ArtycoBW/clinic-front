@@ -1,0 +1,28 @@
+// Запрос для поиска доктора
+import { DOCTOR_ATTRIBUTES } from '@/entities/doctor/gql/fragments'
+import { gql } from '@apollo/client'
+
+// Запрос для поиска клиентов
+// export const SEARCH_CUSTOMER = gql`
+//     query searchCustomer($searchStr: String!) {
+//         searchCustomer(cond: "(it.person.entity.firstName+it.person.entity.lastName).$upper $like '%' + ${searchStr}.$upper + '%'")
+//         @strExpr(string: $searchStr) {
+//             elems {
+//                 ...CustomerAttributes
+//             }
+//         }
+//     }
+// `;
+
+
+// Запрос для поиска клиентов
+export const SEARCH_CUSTOMER = gql`
+    query searchCustomer {
+        searchCustomer(cond: "(it.person.entity.firstName+it.person.entity.lastName).$upper $like '%' + ''.$upper + '%'")
+        {
+            elems {
+                ...CustomerAttributes
+            }
+        }
+    }
+`
