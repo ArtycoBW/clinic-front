@@ -9,7 +9,7 @@ interface IHeaderProps {
 
 export const Header: FC<IHeaderProps> = ({ path }) => {
   return (
-    <div className="flex justify-between items-center">
+    <div className="flex justify-between items-center mx-12">
       <BreadcrumbPage className="w-full">
         <BreadcrumbList>
           <BreadcrumbItem>

@@ -1,9 +1,0 @@
-
-fragment PersonAttributes on _E_Person {
-    id
-    __typename
-    firstName
-    lastName
-    inn
-    birthDate
-}
