@@ -42,7 +42,7 @@ const Sidebar = () => {
           <SidebarLink icon={User} label="Доктора" href="/doctors" />
           <SidebarLink icon={BriefcaseMedical} label="Услуги" href="/services" />
           <SidebarLink icon={Hospital} label="Клиники" href="/clinics" />
-          <SidebarLink icon={Calendar} label="Расписание" href="/schedule" />
+          <SidebarLink icon={Calendar} label="Запись к врачу" href="/schedule" />
           <SidebarLink icon={Settings} label="Настройки" href="/settings" />
         </nav>
 
