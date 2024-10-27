@@ -16,14 +16,14 @@ import { CLINIC_OFFICE_ATTRIBUTES_FRAGMENT } from '@/entities/clinicOffice/gql/f
 // `;
 
 export const SEARCH_CLINIC_OFFICE = gql`
-    query searchClinicOffice {
-        searchClinicOffice(
-            cond: "it.clinic.id == '' && it.officeNumber.$upper $like '%' + ''.$upper + '%'"
-        ){
-            elems {
-                ...ClinicOfficeAttributes
-            }
-        }
+  query searchClinicOffice {
+    searchClinicOffice(
+      cond: "it.clinic.id == '7430045310808948737' && it.officeNumber.$upper $like '%' + ''.$upper + '%'"
+    ) {
+      elems {
+        ...ClinicOfficeAttributes
+      }
     }
-    ${CLINIC_OFFICE_ATTRIBUTES_FRAGMENT}
+  }
+  ${CLINIC_OFFICE_ATTRIBUTES_FRAGMENT}
 `
