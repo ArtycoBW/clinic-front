@@ -1,0 +1,13 @@
+fragment CustomerAttributes on _E_Customer {
+    id
+    __typename
+    insurancePolicyNumber
+    phoneNumber
+    person {
+        entityId
+        entity{
+            firstName
+            lastName
+        }
+    }
+}

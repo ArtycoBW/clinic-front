@@ -11,3 +11,38 @@ export interface SearchDoctorTypeResponse {
     count: number;
   };
 }
+
+export interface UpdateOrCreateDoctorTypeResponse {
+  // Определите тип ответа вашей мутации
+  dictionaryPacket: {
+    updateOrCreateDoctorType: {
+      returning: {
+        id: string;
+        name: string;
+        description: string;
+      }[];
+    };
+  };
+}
+
+export interface UpdateOrCreateDoctorTypeVariables {
+  id: string;
+  name: string;
+  description?: string; // Этот параметр может быть необязательным
+}
+
+export interface DeleteDoctorTypeResponse {
+  dictionaryPacket: {
+    updateOrCreateDoctorType: {
+      returning: {
+        id: string;
+        name: string;
+        description: string;
+      }[];
+    };
+  };
+}
+
+export interface DeleteDoctorTypeVariables {
+  id: string;
+}

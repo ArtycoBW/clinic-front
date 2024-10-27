@@ -1,15 +1,14 @@
 'use client'
 import React, { useState, useEffect } from 'react'
-import Keycloak from 'keycloak-js' // теперь импортируем только Keycloak
-import { ApolloClient, ApolloProvider, InMemoryCache } from '@apollo/client'
+import Keycloak from 'keycloak-js'
+import { ApolloClient, ApolloProvider, InMemoryCache, ApolloLink, HttpLink, ServerError } from '@apollo/client'
+import { onError } from '@apollo/client/link/error'
 import { AppContext, UserInfo } from '@/components/AppContext'
-import { SidebarCustom } from '@/components/sidebar'
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   const [keycloak] = useState<Keycloak>(new Keycloak('/keycloak.json'))
   const [authenticated, setAuthenticated] = useState(false)
   const [userInfo, setUserInfo] = useState<UserInfo | undefined>(undefined)
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [apolloClient, setApolloClient] = useState<ApolloClient<any> | null>(null)
 
   useEffect(() => {
@@ -18,11 +17,46 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       setAuthenticated(isAuthenticated)
 
       if (isAuthenticated) {
-        const client = new ApolloClient({
-          uri: process.env.NEXT_PUBLIC_DS_ENDPOINT,
-          cache: new InMemoryCache(),
-          headers: { Authorization: `Bearer ${keycloak.token}` },
+        const errorLink = onError(({ graphQLErrors, networkError }) => {
+          if (graphQLErrors) {
+            graphQLErrors.forEach(({ message, locations, path }) =>
+              console.error(`Ошибка GraphQL: ${message}`, { locations, path }),
+            )
+          }
+
+          if (networkError) {
+            console.error(`Сетевая ошибка: ${networkError}`)
+
+            // Проверка типа для networkError
+            if ('result' in networkError && (networkError as ServerError).result) {
+              console.error('Ответ от сервера:', (networkError as ServerError).result)
+            }
+          }
         })
+
+        const envVar = process.env.NEXT_PUBLIC_DS_ENDPOINT
+
+        const httpLink = new HttpLink({
+          uri: `https://cors-anywhere.herokuapp.com/${envVar}`,
+          fetch: (uri, options) => {
+            // Устанавливаем mode: 'no-cors' только временно для отладки CORS
+            options = {
+              ...options,
+              // mode: 'no-cors',
+              headers: {
+                ...options?.headers,
+                Authorization: `Bearer ${keycloak.token}`,
+              },
+            }
+            return fetch(uri, options)
+          },
+        })
+
+        const client = new ApolloClient({
+          link: ApolloLink.from([errorLink, httpLink]),
+          cache: new InMemoryCache(),
+        })
+
         setApolloClient(client)
 
         const userInfoData = await keycloak.loadUserInfo()
@@ -46,7 +80,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <body>
     <AppContext.Provider value={{ keycloak, userInfo }}>
       <ApolloProvider client={apolloClient}>
-        <SidebarCustom />
+        {/* <Sidebar /> */}
         {children}
       </ApolloProvider>
     </AppContext.Provider>

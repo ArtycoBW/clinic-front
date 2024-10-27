@@ -1,14 +1,28 @@
-'use client';
-import { useSearchDoctorType } from "@/entities/doctorType/hooks/useSearchDoctorType";
-import { useState } from "react";
+'use client'
+import { ChangeEvent, useState } from 'react'
+import { useCreateCustomer } from '@/entities/customer/hooks/useCreateCustomer'
+import { useSearchClinic } from '@/entities/clinic/hooks/useSearchClinicю'
 
 export default function Home() {
-  const [searchStr, setSearchStr] = useState("");
-  const { doctors, loading, error, invalidateCache } = useSearchDoctorType(searchStr);
+  const [searchStr, setSearchStr] = useState('')
+  const { clinics: persons, loading, error } = useSearchClinic(searchStr)
+  const {
+    executeMutation: mutate,
+    error: mutErr,
+  } = useCreateCustomer()
 
-  const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchStr(event.target.value);
-  };
+  const handleInputChange = (event: ChangeEvent<HTMLInputElement>) => {
+    setSearchStr(event.target.value)
+  }
+
+  const handleSubmit = async () => {
+    try {
+      await mutate('7429848543427952641', '7429848543427952641')
+      alert('Мутация прошла')
+    } catch {
+      alert('Ошибка при мутации')
+    }
+  }
 
   return (
     <div>
@@ -19,19 +33,19 @@ export default function Home() {
         value={searchStr}
         onChange={handleInputChange}
       />
-      <button onClick={invalidateCache}>Обновить данные</button>
+      <button onClick={handleSubmit}>Submit</button>
 
       {loading && <p>Загрузка...</p>}
       {error && <p>Ошибка: {error.message}</p>}
+      {mutErr && <p>Ошибка 2: {mutErr.message}</p>}
 
       <ul>
-        {doctors.map((doctor) => (
-          <li key={doctor.id}>
-            <h2>{doctor.name}</h2>
-            <p>{doctor.description}</p>
+        {persons.map((item) => (
+          <li key={item.id}>
+            <h2>{item.id}</h2>
           </li>
         ))}
       </ul>
     </div>
-  );
+  )
 }
