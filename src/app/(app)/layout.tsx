@@ -47,7 +47,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         <AppContext.Provider value={{ keycloak, userInfo }}>
           <ApolloProvider client={apolloClient}>
-            <div className="flex">
+            <div className="flex h-full">
               <Sidebar />
               <div className="flex-auto p-4 w-full">{children}</div>
               <Info />
