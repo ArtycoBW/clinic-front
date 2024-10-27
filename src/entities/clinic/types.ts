@@ -15,6 +15,7 @@ export interface SearchClinicVariables {
   searchStr: string;
 }
 
+//
 // Тип клиники, используемой в ответе
 export interface Clinic {
   id: string;
