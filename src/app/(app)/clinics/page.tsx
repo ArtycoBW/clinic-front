@@ -1,15 +1,13 @@
 import { Header } from '@/components/header'
 import { Wrapper } from '@/components/wrapper'
 
-const ClientPage = () => {
+export default function ClientPage() {
   return (
     <>
       <Header path="Главная" />
       <Wrapper>
-        <div className="">hello</div>
+        <div className="">Clinics</div>
       </Wrapper>
     </>
   )
 }
-
-export default ClientPage

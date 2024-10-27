@@ -4,6 +4,8 @@ import Keycloak from 'keycloak-js'
 import { ApolloClient, ApolloProvider, InMemoryCache, ApolloLink, HttpLink, ServerError } from '@apollo/client'
 import { onError } from '@apollo/client/link/error'
 import { AppContext, UserInfo } from '@/components/AppContext'
+import Sidebar from '@/components/sidebar'
+import Info from '@/components/info'
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   const [keycloak] = useState<Keycloak>(new Keycloak('/keycloak.json'))
@@ -77,14 +79,17 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
   return (
     <html lang="en">
-    <body>
-    <AppContext.Provider value={{ keycloak, userInfo }}>
-      <ApolloProvider client={apolloClient}>
-        {/* <Sidebar /> */}
-        {children}
-      </ApolloProvider>
-    </AppContext.Provider>
-    </body>
+      <body>
+        <AppContext.Provider value={{ keycloak, userInfo }}>
+          <ApolloProvider client={apolloClient}>
+            <div className="flex h-full">
+              <Sidebar />
+              <div className="flex-auto p-4 w-full">{children}</div>
+              <Info />
+            </div>
+          </ApolloProvider>
+        </AppContext.Provider>
+      </body>
     </html>
   )
 }

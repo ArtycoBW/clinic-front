@@ -9,20 +9,19 @@ interface IHeaderProps {
 
 export const Header: FC<IHeaderProps> = ({ path }) => {
   return (
-    <div className="wrapper flex justify-between items-center p-top">
-      <BreadcrumbPage>
+    <div className="flex justify-between items-center">
+      <BreadcrumbPage className="w-full">
         <BreadcrumbList>
           <BreadcrumbItem>
-            <BreadcrumbPage>Страницы</BreadcrumbPage>
+            <span className="font-normal text-[14px] text-[#6E7191]">Страницы</span>
           </BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbItem>
-            <BreadcrumbPage>{path}</BreadcrumbPage>
+            <span className="font-normal text-[14px] text-[#6E7191]">{path}</span>
           </BreadcrumbItem>
         </BreadcrumbList>
       </BreadcrumbPage>
-      <div
-        className="flex items-center justify-center max-w-320 max-h-45 rounded-[7px] bg-white pl-[12px] pr-[12px]">
+      <div className="flex items-center justify-center rounded-lg h-12 bg-white pl-[12px] w-3/5">
         <InputSearch />
         <Input placeholder="Поиск" className="border-none outline-none ring-0 shadow-none" />
       </div>
