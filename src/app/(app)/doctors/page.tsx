@@ -13,6 +13,7 @@ import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { useState } from 'react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 
 const doctorSchema = z.object({
   name: z.string().min(1, 'Имя не должно быть пустым'),
@@ -197,7 +198,16 @@ export default function DoctorsPage() {
                             <FormItem>
                               <FormLabel>Специальность</FormLabel>
                               <FormControl>
-                                <Input {...field} disabled={false} placeholder="Введите специальность" type="text" />
+                              <Select>
+                                  <SelectTrigger>
+                                  <SelectValue placeholder="Theme" />
+                                </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="light">Light</SelectItem>
+                                    <SelectItem value="dark">Dark</SelectItem>
+                                    <SelectItem value="system">System</SelectItem>
+                                  </SelectContent>
+                                  </Select>
                               </FormControl>
                               <FormMessage />
                             </FormItem>
@@ -456,7 +466,7 @@ export default function DoctorsPage() {
                                     control={editSpecializationForm.control}
                                     render={({ field }) => (
                                       <FormItem>
-                                        <FormLabel>Имя</FormLabel>
+                                        <FormLabel>Наименование</FormLabel>
                                         <FormControl>
                                           <Input
                                             {...field}
@@ -475,7 +485,7 @@ export default function DoctorsPage() {
                                     control={editSpecializationForm.control}
                                     render={({ field }) => (
                                       <FormItem>
-                                        <FormLabel>Фамилия</FormLabel>
+                                        <FormLabel>Описание</FormLabel>
                                         <FormControl>
                                           <Input
                                             {...field}
