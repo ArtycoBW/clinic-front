@@ -5,9 +5,14 @@ import { Header } from '@/components/header'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { ChevronRight, Flame, User, Users } from 'lucide-react'
-
+import { useAppContext } from '@/components/AppContext'
+import { useSearchCustomer } from '@/entities/customer/hooks/useSearchCustomer'
+import { Spinner } from '@/components/spinner'
 
 export default function ClientPage() {
+  const name = useAppContext()?.userInfo?.name
+
+  const { customers, loading } = useSearchCustomer('')
 
   return (
     <div className="w-full">
@@ -17,7 +22,7 @@ export default function ClientPage() {
           <CardContent className="p-0">
             <h1 className="text-3xl font-normal text-white">
               <span className="text-[#7A40F2] mr-2 pl-3">Привет,</span>
-              Менеджер 1
+              {name}
             </h1>
             <p className="text-white text-lg pt-4 pb-8 pl-3">Ваш профиль был активирован</p>
             <Button variant="ghost" className="text-white p-3 flex justify-center items-center">
@@ -34,7 +39,9 @@ export default function ClientPage() {
                 <User className="w-7 h-7 text-white" />
               </div>
               <div className="grid gap-4">
-                <h2 className="font-semibold text-xl text-[#6E7191]">16/20</h2>
+                <h2 className="font-semibold text-xl text-[#6E7191]">
+                  {!customers || loading ? <Spinner /> : customers.length}
+                </h2>
                 <span className="text-xl text-[#6E7191]">Новых пациентов</span>
               </div>
             </CardContent>
@@ -58,7 +65,7 @@ export default function ClientPage() {
                 <Users className="w-7 h-7 text-white" />
               </div>
               <div className="grid gap-4">
-                <h2 className="font-semibold text-xl text-[#6E7191]">870</h2>
+                <h2 className="font-semibold text-xl text-[#6E7191]">54</h2>
                 <span className="text-xl text-[#6E7191]">Постоянных клиентов</span>
               </div>
             </CardContent>
