@@ -1,0 +1,9 @@
+fragment ClinicOfficeAttributes on _E_ClinicOffice {
+    id
+    __typename
+    clinic {
+        id
+        name
+    }
+    officeNumber
+}

@@ -1,0 +1,10 @@
+fragment ClinicDoctorAvailabilityAttributes on _E_ClinicDoctorAvailability {
+    id
+    __typename
+    beginDate
+    endDate
+    clinicOffice {
+        id
+        officeNumber
+    }
+}

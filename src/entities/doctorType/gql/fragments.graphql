@@ -1,6 +1,6 @@
 fragment DoctorTypeAttributes on _E_DoctorType {
-  id
-  __typename
-  name
-  description
+    id
+    __typename
+    name
+    description
 }

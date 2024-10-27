@@ -1,0 +1,5 @@
+fragment ClinicAttributes on _E_Clinic {
+    id
+    __typename
+    name
+}
