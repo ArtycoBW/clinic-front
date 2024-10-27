@@ -6,6 +6,7 @@ import { onError } from '@apollo/client/link/error'
 import { AppContext, UserInfo } from '@/components/AppContext'
 import Sidebar from '@/components/sidebar'
 import Info from '@/components/info'
+import { Toaster } from '@/components/ui/toaster'
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   const [keycloak] = useState<Keycloak>(new Keycloak('/keycloak.json'))
@@ -87,6 +88,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <div className="flex-auto p-4 w-full">{children}</div>
               <Info />
             </div>
+            <Toaster />
           </ApolloProvider>
         </AppContext.Provider>
       </body>

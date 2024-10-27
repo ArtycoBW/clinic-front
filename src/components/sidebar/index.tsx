@@ -1,24 +1,10 @@
 'use client'
-import {
-  BriefcaseMedical,
-  Calendar,
-  ChartPie,
-  ChevronDown,
-  ChevronUp,
-  Heart,
-  Home,
-  Hospital,
-  Settings,
-  User,
-} from 'lucide-react'
+import { BriefcaseMedical, Calendar, ChartPie, Heart, Home, Hospital, Settings, User } from 'lucide-react'
 import Image from 'next/image'
-import React, { useState } from 'react'
 import SidebarLink from './SidebarLink'
-import useGlobalStore from '@/store/counterStore'
+import useGlobalStore from '@/store/globalStore'
 
 const Sidebar = () => {
-  const [showProjects, setShowProjects] = useState(true)
-
   const { isSidebarCollapsed } = useGlobalStore()
 
   const sidebarClassNames = `relative flex flex-col h-[100vh] justify-between shadow-xl
@@ -43,7 +29,7 @@ const Sidebar = () => {
         <nav className="z-10 mx-auto mt-8 grid gap-4">
           <SidebarLink icon={Home} label="Главная" href="/home" />
           <SidebarLink icon={ChartPie} label="Отчёты" href="/reports" />
-          <SidebarLink icon={Heart} label="Клиенты" href="/clients" />
+          <SidebarLink icon={Heart} label="Пользователи" href="/persons" />
           <SidebarLink icon={User} label="Доктора" href="/doctors" />
           <SidebarLink icon={BriefcaseMedical} label="Услуги" href="/services" />
           <SidebarLink icon={Hospital} label="Клиники" href="/clinics" />
